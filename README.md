@@ -1,6 +1,6 @@
-# Liver Mitra Health Assistant
+# Liver Health Assistant
 
-A lightweight, responsive, rule-based **liver-care chatbot widget** designed for the Liver Mitra website. It provides quick information about liver conditions, treatments, transplant support, appointments, contact details, and WhatsApp enquiries.
+A lightweight, responsive, rule-based **liver-care chatbot widget** designed for the Liver website. It provides quick information about liver conditions, treatments, transplant support, appointments, contact details, and WhatsApp enquiries.
 
 > **Medical disclaimer:** This assistant provides general information only. It is not a diagnosis tool or an emergency service.
 
@@ -111,7 +111,7 @@ For WhatsApp, use a number that includes the country code. The script automatica
 
 ### 3. Add chatbot assets
 
-Add your chatbot icon and Liver Mitra icon to:
+Add your chatbot icon and Liver icon to:
 
 ```text
 assets/images/bot.png
@@ -161,7 +161,7 @@ After validation, the widget creates a pre-filled WhatsApp appointment request a
 The request contains the patient's entered details, for example:
 
 ```text
-New Liver Mitra Appointment Request
+New Liver Appointment Request
 
 Name: [Name]
 Phone: [Phone]
@@ -303,6 +303,6 @@ If you plan to publish this as an open-source repository, add a `LICENSE` file a
 
 ## Disclaimer
 
-The Liver Mitra Health Assistant is intended to provide general educational and navigation support. It should not be used for diagnosis, treatment decisions, or emergency assessment.
+The Liver Health Assistant is intended to provide general educational and navigation support. It should not be used for diagnosis, treatment decisions, or emergency assessment.
 
 For urgent or severe symptoms, users should seek appropriate emergency medical care.
