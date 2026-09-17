@@ -1,0 +1,875 @@
+<style>
+    :root {
+        --lm-primary: #0f766e;
+        --lm-primary-2: #14b8a6;
+        --lm-accent: #d99a35;
+        --lm-dark: #082f36;
+        --lm-bg: #f8fafc;
+        --lm-border: #dbe4e8;
+        --lm-text: #17202a;
+        --lm-muted: #64748b;
+        --lm-danger: #b42318;
+        --lm-success: #16a34a;
+        --lm-shadow: 0 24px 70px rgba(2, 32, 41, .22)
+    }
+
+    #botButton {
+        position: fixed;
+        right: 32px;
+        bottom: 105px;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        z-index: 9999;
+        cursor: pointer;
+        background: linear-gradient(145deg, var(--lm-primary-2), var(--lm-dark));
+        padding: 3px;
+        box-shadow: 0 16px 36px rgba(15, 118, 110, .34);
+        transition: .25s ease
+    }
+
+    #botButton:hover {
+        transform: translateY(-4px) scale(1.04)
+    }
+
+    #botButton img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #fff
+    }
+
+    #botTooltip {
+        position: fixed;
+        right: 30px;
+        bottom: 180px;
+        z-index: 9998;
+        background: #082f36;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 14px 14px 3px 14px;
+        font: 600 12px/1.35 system-ui;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, .18);
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: .3s
+    }
+
+    #botTooltip.show {
+        opacity: 1;
+        transform: none
+    }
+
+    #chatBox {
+        position: fixed;
+        right: 26px;
+        bottom: 180px;
+        width: 390px;
+        max-width: calc(100vw - 28px);
+        height: 570px;
+        max-height: calc(100vh - 210px);
+        z-index: 9999;
+        border: 1px solid rgba(15, 118, 110, .16);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, .98);
+        box-shadow: var(--lm-shadow);
+        overflow: hidden;
+        display: none;
+        flex-direction: column;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+        transition: .22s ease
+    }
+
+    #chatBox.active {
+        display: flex;
+        opacity: 1;
+        transform: none
+    }
+
+    #chatHeader {
+        padding: 14px 15px;
+        color: #fff;
+        background: linear-gradient(125deg, #073b45 0%, #0f766e 58%, #2aa98f 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+    #chatHeader-left {
+        display: flex;
+        gap: 10px;
+        align-items: center
+    }
+
+    .bot-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #fff;
+        padding: 5px;
+        display: grid;
+        place-items: center
+    }
+
+    .bot-avatar img {
+        max-width: 100%;
+        max-height: 100%
+    }
+
+    .bot-title {
+        font-weight: 750;
+        font-size: 15px
+    }
+
+    .bot-subtitle {
+        font-size: 10.5px;
+        opacity: .83;
+        margin-top: 2px
+    }
+
+    .online-state {
+        font-size: 10px;
+        display: flex;
+        gap: 5px;
+        align-items: center
+    }
+
+    .online-dot {
+        width: 7px;
+        height: 7px;
+        background: #5df28b;
+        border-radius: 50%;
+        box-shadow: 0 0 0 4px rgba(93, 242, 139, .15)
+    }
+
+    .chat-close {
+        padding: 0;
+        /* border: 0; */
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px
+    }
+
+    #chatMessages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px 18px;
+        background: linear-gradient(#f8fbfb, #fff);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        scroll-behavior: smooth
+    }
+
+    .msg-wrap {
+        display: flex;
+        flex-direction: column;
+        max-width: 86%
+    }
+
+    .msg-wrap.bot-wrap {
+        align-self: flex-start
+    }
+
+    .msg-wrap.user-wrap {
+        align-self: flex-end
+    }
+
+    .msg {
+        padding: 9px 11px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word
+    }
+
+    .msg.bot {
+        background: #fff;
+        color: var(--lm-text);
+        border: 1px solid var(--lm-border);
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .05)
+    }
+
+    .msg.user {
+        background: linear-gradient(135deg, #0f766e, #119d8e);
+        color: #fff;
+        border-bottom-right-radius: 5px;
+        box-shadow: 0 7px 16px rgba(15, 118, 110, .17)
+    }
+
+    .msg-time {
+        font-size: 9.5px;
+        color: #94a3b8;
+        margin: 3px 5px 0
+    }
+
+    .user-wrap .msg-time {
+        text-align: right
+    }
+
+    .msg a {
+        color: #0f766e;
+        font-weight: 700;
+        text-decoration: none
+    }
+
+    .msg.user a {
+        color: #fff
+    }
+
+    .options-row {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-self: flex-start;
+        max-width: 100%;
+        margin: 2px 0 5px
+    }
+
+    .option-pill {
+        border: 1px solid #b9d8d4;
+        background: #fff;
+        color: #0f5f59;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 11.5px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: .18s
+    }
+
+    .option-pill:hover {
+        background: #eaf8f6;
+        transform: translateY(-1px)
+    }
+
+    .service-card {
+        border: 1px solid #d8e5e4;
+        border-radius: 12px;
+        padding: 9px 10px;
+        background: #fff;
+        margin-top: 6px
+    }
+
+    .service-card b {
+        color: #0f766e
+    }
+
+    .mini-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 8px
+    }
+
+    .mini-link {
+        border: 0;
+        border-radius: 8px;
+        background: #e9f7f5;
+        color: #0f766e;
+        padding: 6px 8px;
+        font-size: 10.5px;
+        font-weight: 700;
+        cursor: pointer
+    }
+
+    .typing {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        padding: 10px 12px
+    }
+
+    .typing i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #7a9194;
+        animation: lmDot 1.1s infinite
+    }
+
+    .typing i:nth-child(2) {
+        animation-delay: .16s
+    }
+
+    .typing i:nth-child(3) {
+        animation-delay: .32s
+    }
+
+    @keyframes lmDot {
+
+        0%,
+        60%,
+        100% {
+            transform: translateY(0);
+            opacity: .45
+        }
+
+        30% {
+            transform: translateY(-4px);
+            opacity: 1
+        }
+    }
+
+    .form-container {
+        background: #fff;
+        border: 1px solid var(--lm-border);
+        border-radius: 14px;
+        padding: 11px;
+        margin-top: 5px
+    }
+
+    .form-container h4 {
+        font-size: 13px;
+        margin: 0 0 3px;
+        color: #0f766e
+    }
+
+    .form-container small {
+        font-size: 10px;
+        color: var(--lm-muted)
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        margin-top: 7px
+    }
+
+    .form-container input,
+    .form-container select,
+    .form-container textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #d4dde1;
+        border-radius: 9px;
+        padding: 8px 9px;
+        font-size: 12px;
+        color: #111827;
+        background: #fff;
+        outline: none
+    }
+
+    .form-container textarea {
+        grid-column: 1/-1;
+        min-height: 60px;
+        resize: vertical
+    }
+
+    .form-container input:focus,
+    .form-container select:focus,
+    .form-container textarea:focus {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, .09)
+    }
+
+    .form-container button {
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #0f766e, #11a18e);
+        color: #fff;
+        padding: 9px 12px;
+        font-size: 11px;
+        font-weight: 750;
+        cursor: pointer;
+        margin-top: 8px;
+        width: 100%
+    }
+
+    #chatInputBox {
+        border-top: 1px solid #e5ecef;
+        background: #fff;
+        padding: 9px;
+        display: flex;
+        align-items: flex-end;
+        gap: 7px
+    }
+
+    #chatInput {
+        flex: 1;
+        min-height: 38px;
+        max-height: 90px;
+        border: 1px solid #d5dfe3;
+        border-radius: 18px;
+        padding: 10px 12px;
+        font-size: 12px;
+        outline: none;
+        resize: none;
+        font-family: inherit
+    }
+
+    #chatInput:focus {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, .08)
+    }
+
+    #sendBtn {
+        padding: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 0;
+        background: #0f766e;
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+        display: grid;
+        place-items: center
+    }
+
+    .disclaimer {
+        font-size: 9px;
+        color: #94a3b8;
+        text-align: center;
+        padding: 0 10px 8px;
+        background: #fff
+    }
+
+    #chatMessages::-webkit-scrollbar {
+        width: 5px
+    }
+
+    #chatMessages::-webkit-scrollbar-thumb {
+        background: #b7ccca;
+        border-radius: 10px
+    }
+
+    @media(max-width:575px) {
+        #botButton {
+            right: 18px;
+            bottom: 82px;
+            width: 54px;
+            height: 54px
+        }
+
+        #botTooltip {
+            right: 18px;
+            bottom: 145px
+        }
+
+        #chatBox {
+            right: 10px;
+            bottom: 145px;
+            width: calc(100vw - 20px);
+            height: min(600px, calc(100vh - 165px));
+            border-radius: 20px
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr
+        }
+    }
+</style>
+
+<div id="botButton" aria-label="Open Liver Mitra assistant" role="button" tabindex="0">
+    <img src="assets/images/bot.png" alt="Liver Mitra assistant">
+</div>
+<div id="botTooltip">💬 Ask Liver Mitra Assistant</div>
+
+<div id="chatBox" role="dialog" aria-label="Liver Mitra Health Assistant">
+    <div id="chatHeader">
+        <div id="chatHeader-left">
+            <div class="bot-avatar"><img src="assets/images/fav-icon.svg" alt="Liver Mitra"></div>
+            <div>
+                <div class="bot-title">Liver Mitra Assistant</div>
+                <div class="bot-subtitle">Liver care • Transplant • Surgery support</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px">
+            <div class="online-state"><span class="online-dot"></span> Online</div><button class="chat-close" id="chatClose" aria-label="Close">×</button>
+        </div>
+    </div>
+    <div id="chatMessages"></div>
+    <div id="chatInputBox">
+        <textarea id="chatInput" rows="1" placeholder="Ask about liver symptoms, treatment, transplant…"></textarea>
+        <button id="sendBtn" aria-label="Send">➤</button>
+    </div>
+    <div class="disclaimer">General information only — not a diagnosis or emergency service.</div>
+</div>
+
+<script>
+    (() => {
+        const DOCTOR_NAME = 'Liver Mitra';
+        const CONTACT_NUMBER = '<?= $phone ?>';
+        const WHATSAPP_NUMBER = '<?= $phone ?>';
+
+        const SERVICE_GROUPS = {
+            'Liver Diseases': ['Causes & Risk Factors', 'Hepatitis A & E', 'Hepatitis B', 'Hepatitis C', 'Cirrhosis & CLD', 'Alcoholic Liver Disease', 'Liver Cancer', 'Liver Diseases in Children', 'Liver Disease Treatment'],
+            'Liver Transplant': ['Domino Liver Transplant', 'Split Liver Transplant', 'Living Donor Liver Transplant', 'DDLT', 'Living Donor vs DDLT'],
+            'Liver Surgery': ['Hepatectomy (Liver Resection)', 'Lobectomy', 'Segmentectomy', 'Wedge Resection', 'Liver Transplantation', 'Laparoscopic/Robotic Liver Surgery', 'Liver Injury', 'Biliary/Liver-related Operations']
+        };
+        const ALL_SERVICES = Object.values(SERVICE_GROUPS).flat();
+
+        const el = id => document.getElementById(id),
+            botButton = el('botButton'),
+            chatBox = el('chatBox'),
+            chatMessages = el('chatMessages'),
+            chatInput = el('chatInput'),
+            sendBtn = el('sendBtn'),
+            botTooltip = el('botTooltip'),
+            chatClose = el('chatClose');
+        let typingNode = null;
+
+        const escapeHTML = s => String(s).replace(/[&<>'"]/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        } [c]));
+        const cleanPhone = n => String(n || '').replace(/\D/g, '');
+        const nowTime = () => new Intl.DateTimeFormat('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(new Date());
+
+        // Chat history is intentionally NOT stored.
+        // Refreshing the page always starts a new conversation.
+        function saveChat() {
+            // No persistence
+        }
+
+        function restoreChat() {
+            chatMessages.innerHTML = '';
+            return false;
+        }
+
+        function scrollBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight
+        }
+
+        function addMessage(text, type = 'bot', save = true) {
+            const wrap = document.createElement('div');
+            wrap.className = `msg-wrap ${type}-wrap`;
+            const msg = document.createElement('div');
+            msg.className = `msg ${type}`;
+            type === 'user' ? msg.textContent = text : msg.innerHTML = text;
+            const time = document.createElement('div');
+            time.className = 'msg-time';
+            time.textContent = nowTime();
+            wrap.append(msg, time);
+            chatMessages.appendChild(wrap);
+            scrollBottom();
+            if (save) saveChat();
+            return wrap;
+        }
+
+        function showTyping() {
+            hideTyping();
+            typingNode = document.createElement('div');
+            typingNode.className = 'msg-wrap bot-wrap';
+            typingNode.innerHTML = '<div class="msg bot typing"><i></i><i></i><i></i></div>';
+            chatMessages.appendChild(typingNode);
+            scrollBottom()
+        }
+
+        function hideTyping() {
+            if (typingNode) {
+                typingNode.remove();
+                typingNode = null
+            }
+        }
+
+        function reply(html, delay = 350) {
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage(html, 'bot')
+            }, delay)
+        }
+
+        function buttons(items) {
+            document.querySelectorAll('.options-row').forEach(x => x.remove());
+            const row = document.createElement('div');
+            row.className = 'options-row';
+            items.forEach(([label, action]) => {
+                const b = document.createElement('button');
+                b.className = 'option-pill';
+                b.textContent = label;
+                b.onclick = () => handleAction(action, label);
+                row.appendChild(b)
+            });
+            chatMessages.appendChild(row);
+            scrollBottom();
+            saveChat()
+        }
+
+        function mainOptions() {
+            buttons([
+                ['📅 Book Appointment', 'appointment'],
+                ['🩺 Liver Symptoms', 'symptoms'],
+                ['📋 Treatments', 'services'],
+                ['🫀 Transplant', 'transplant'],
+                ['📞 Contact', 'contact'],
+                ['🟢 WhatsApp', 'whatsapp']
+            ])
+        }
+
+        function welcome() {
+            addMessage(`Hello! 👋 Welcome to <b>${DOCTOR_NAME}</b>.<br>I can help with liver symptoms, hepatitis, cirrhosis, liver cancer, transplant, surgery, appointments and contact details.`, 'bot');
+            mainOptions()
+        }
+
+        function openChat() {
+            botTooltip.classList.remove('show');
+            chatBox.style.display = 'flex';
+            requestAnimationFrame(() => chatBox.classList.add('active'));
+            if (chatMessages.children.length === 0) welcome();
+            setTimeout(() => chatInput.focus(), 220)
+        }
+
+        function closeChat() {
+            chatBox.classList.remove('active');
+            setTimeout(() => chatBox.style.display = 'none', 220)
+        }
+        botButton.onclick = () => chatBox.classList.contains('active') ? closeChat() : openChat();
+        chatClose.onclick = closeChat;
+        botButton.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') botButton.click()
+        };
+        setTimeout(() => {
+            if (!chatBox.classList.contains('active')) botTooltip.classList.add('show')
+        }, 1200);
+        setTimeout(() => botTooltip.classList.remove('show'), 6500);
+
+        function handleAction(action, label = '') {
+            if (label) addMessage(label.replace(/^[^\w]+/u, ''), 'user');
+            if (action === 'appointment') return showForm();
+            if (action === 'services') return showServices();
+            if (action === 'symptoms') return showSymptoms();
+            if (action === 'transplant') return showTransplant();
+            if (action === 'contact') return showContact();
+            if (action === 'whatsapp') return showWhatsApp();
+            if (action.startsWith('group:')) return showServiceGroup(action.split(':')[1]);
+            if (action.startsWith('symptom:')) return symptomReply(action.split(':')[1]);
+            if (action === 'menu') return mainOptions();
+        }
+
+        function showSymptoms() {
+            reply(`<b>Common liver-related concerns</b><br>Choose what best matches your concern.`, 200);
+            setTimeout(() => buttons([
+                ['🟡 Jaundice', 'symptom:jaundice'],
+                ['🤕 Upper-right abdominal pain', 'symptom:pain'],
+                ['💧 Abdominal/leg swelling', 'symptom:swelling'],
+                ['😴 Fatigue / weakness', 'symptom:fatigue'],
+                ['🤢 Nausea / poor appetite', 'symptom:nausea'],
+                ['⬅ Main Menu', 'menu']
+            ]), 230)
+        }
+
+        function symptomReply(key) {
+            const m = {
+                jaundice: `🟡 <b>Jaundice</b><br>Yellowing of the eyes/skin can occur with hepatitis, bile-duct obstruction or other liver conditions. A doctor may advise liver-function tests and imaging depending on the situation.<br><br><b>Seek urgent care</b> if jaundice is accompanied by confusion, severe weakness, repeated vomiting, bleeding, high fever or severe abdominal pain.`,
+                pain: `🤕 <b>Right upper abdominal pain</b><br>Pain in the liver area can have several causes and cannot be diagnosed from symptoms alone. Persistent, severe or worsening pain should be medically evaluated.`,
+                swelling: `💧 <b>Abdominal or leg swelling</b><br>Swelling can occur in advanced liver disease and other conditions. New or increasing abdominal swelling, breathing difficulty, reduced urine, confusion or bleeding needs prompt medical assessment.`,
+                fatigue: `😴 <b>Fatigue & weakness</b><br>Fatigue is non-specific but can accompany liver disease. If persistent, especially with jaundice, dark urine, weight loss, itching or abdominal swelling, consider a liver evaluation.`,
+                nausea: `🤢 <b>Nausea / poor appetite</b><br>These symptoms have many possible causes. Persistent symptoms, dehydration, jaundice, weight loss, blood in vomit/stool or severe pain need medical assessment.`
+            };
+            reply(m[key] || 'Please consult a clinician for assessment.');
+            setTimeout(mainOptions, 450)
+        }
+
+        function showServices() {
+            reply('<b>Our liver-care areas</b><br>Select a category to explore.', 220);
+            setTimeout(() => buttons([
+                ['🩺 Liver Diseases', 'group:Liver Diseases'],
+                ['🫀 Liver Transplant', 'group:Liver Transplant'],
+                ['🔬 Liver Surgery', 'group:Liver Surgery'],
+                ['⬅ Main Menu', 'menu']
+            ]), 260)
+        }
+
+        function showServiceGroup(group) {
+            const arr = SERVICE_GROUPS[group] || [];
+            const html = `<b>${escapeHTML(group)}</b><div class="service-card">${arr.map(x=>'• '+escapeHTML(x)).join('<br>')}</div><div class="mini-actions"><button class="mini-link" onclick="window.lmChatAction('appointment','Book Appointment')">Book Appointment</button><button class="mini-link" onclick="window.lmChatAction('whatsapp','WhatsApp')">WhatsApp</button></div>`;
+            reply(html);
+            setTimeout(() => buttons([
+                ['⬅ Treatments', 'services'],
+                ['🏠 Main Menu', 'menu']
+            ]), 420)
+        }
+
+        function showTransplant() {
+            reply(`🫀 <b>Liver Transplant Support</b><br>We can guide you regarding living-donor transplant, deceased-donor liver transplant (DDLT), split liver transplant and transplant evaluation.<br><br>Transplant suitability depends on diagnosis, liver function, complications, overall health and specialist evaluation.`);
+            setTimeout(() => buttons([
+                ['Living Donor', 'group:Liver Transplant'],
+                ['📅 Transplant Consultation', 'appointment'],
+                ['🟢 WhatsApp', 'whatsapp'],
+                ['⬅ Main Menu', 'menu']
+            ]), 420)
+        }
+
+        function showContact() {
+            const n = escapeHTML(CONTACT_NUMBER),
+                tel = 'tel:' + CONTACT_NUMBER.replace(/\s/g, '');
+            reply(`📞 <b>Contact Liver Mitra</b><br>${n}<br><a href="${tel}">Tap to call now</a>`);
+            setTimeout(mainOptions, 400)
+        }
+
+        function showWhatsApp() {
+            const url = `https://wa.me/${cleanPhone(WHATSAPP_NUMBER)}?text=${encodeURIComponent('Hello, I would like to connect with Liver Mitra regarding liver care.')}`;
+            reply(`🟢 <b>WhatsApp Liver Mitra</b><br><a href="${url}" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>`);
+            setTimeout(mainOptions, 400)
+        }
+
+        function showForm() {
+            document.querySelectorAll('.form-message-wrapper').forEach(x => x.remove());
+            const wrap = document.createElement('div');
+            wrap.className = 'form-message-wrapper';
+            wrap.innerHTML = `<form class="form-container" id="lmAppointmentForm"><h4>Book an Appointment</h4><small>Share your details. You will continue on WhatsApp.</small><div class="form-grid"><input id="fName" required maxlength="60" placeholder="Full Name *" autocomplete="name"><input id="fPhone" required maxlength="18" inputmode="tel" placeholder="Phone Number *" autocomplete="tel"><select id="fConcern"><option value="">Select concern</option>${ALL_SERVICES.map(x=>`<option>${escapeHTML(x)}</option>`).join('')}</select><select id="fPreferred"><option value="">Preferred consultation</option><option>Hospital Visit</option></select><textarea id="fMsg" maxlength="300" placeholder="Symptoms / message (optional)"></textarea></div><button type="submit">Continue on WhatsApp</button></form>`;
+            chatMessages.appendChild(wrap);
+            wrap.querySelector('form').onsubmit = submitForm;
+            scrollBottom();
+            saveChat()   
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+            const name = el('fName').value.trim(),
+                phone = el('fPhone').value.trim(),
+                concern = el('fConcern').value,
+                msg = el('fMsg').value.trim(),
+                preferred = el('fPreferred').value;
+            if (name.length < 2) return alert('Please enter your full name.');
+            if (!/^[0-9+\-\s()]{8,18}$/.test(phone)) return alert('Please enter a valid phone number.');
+            const text = `New Liver Mitra Appointment Request\n\nName: ${name}\nPhone: ${phone}\nConcern: ${concern||'Not selected'}\nConsultation: ${preferred||'Not selected'}\nMessage: ${msg||'N/A'}`;
+            window.open(`https://wa.me/${cleanPhone(WHATSAPP_NUMBER)}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+            addMessage('✅ Your appointment request is ready. Please send the pre-filled message in WhatsApp to complete the request.', 'bot');
+            e.target.querySelector('button').disabled = true;
+            e.target.querySelector('button').textContent = 'Request Prepared';
+            saveChat()
+        }
+
+        const intents = [{
+                keys: ['emergency', 'unconscious', 'vomiting blood', 'blood vomit', 'black stool', 'confusion', 'not responding', 'severe bleeding', 'difficulty breathing'],
+                answer: `🚨 <b>Possible emergency</b><br>Please seek emergency medical care immediately or go to the nearest emergency department. This chatbot cannot assess emergencies.`
+            },
+            {
+                keys: ['hepatitis b', 'hbv'],
+                answer: `<b>Hepatitis B</b><br>Hepatitis B is a viral infection affecting the liver. Evaluation may include liver tests, HBV markers/viral load and imaging. Not everyone needs the same treatment; specialist follow-up determines monitoring or antiviral therapy.`
+            },
+            {
+                keys: ['hepatitis c', 'hcv'],
+                answer: `<b>Hepatitis C</b><br>Hepatitis C is commonly evaluated with antibody testing followed by confirmatory viral testing. Modern antiviral treatment can cure most infections, but the exact plan should be decided by a clinician.`
+            },
+            {
+                keys: ['fatty liver', 'fatty liver disease', 'nafld', 'masld'],
+                answer: `<b>Fatty Liver</b><br>Fat accumulation in the liver is often associated with weight, diabetes, cholesterol and metabolic risk factors. Assessment may include liver tests, ultrasound and fibrosis evaluation. Management commonly focuses on weight, metabolic control and individualized medical advice.`
+            },
+            {
+                keys: ['cirrhosis', 'cld', 'chronic liver'],
+                answer: `<b>Cirrhosis / Chronic Liver Disease</b><br>Cirrhosis is advanced liver scarring and may cause jaundice, abdominal swelling, bleeding, confusion or weakness. Regular specialist monitoring is important. New confusion, vomiting blood, black stools or severe swelling needs urgent care.`
+            },
+            {
+                keys: ['liver cancer', 'hcc', 'hepatocellular'],
+                answer: `<b>Liver Cancer</b><br>Liver tumors require specialist evaluation using imaging, liver function, tumor characteristics and overall health. Treatment may include surgery, ablation, transplant, radiation or systemic therapies depending on the case.`
+            },
+            {
+                keys: ['transplant', 'liver transplant', 'donor', 'ddlt'],
+                answer: `<b>Liver Transplant</b><br>Transplant evaluation considers the underlying disease, severity, complications, overall fitness and donor options. Liver Mitra supports living-donor and deceased-donor transplant pathways.`
+            },
+            {
+                keys: ['laparoscopic', 'robotic', 'liver surgery', 'hepatectomy', 'resection', 'lobectomy', 'segmentectomy'],
+                answer: `<b>Liver Surgery</b><br>Liver operations range from wedge/segmental resections to lobectomy, hepatectomy and selected laparoscopic/robotic procedures. The suitable approach depends on diagnosis, location, liver reserve and surgical assessment.`
+            },
+            {
+                keys: ['jaundice', 'yellow eyes', 'yellow skin', 'dark urine'],
+                action: () => symptomReply('jaundice')
+            },
+            {
+                keys: ['appointment', 'consultation', 'book', 'schedule'],
+                action: showForm
+            },
+            {
+                keys: ['contact', 'phone number', 'call'],
+                action: showContact
+            },
+            {
+                keys: ['whatsapp'],
+                action: showWhatsApp
+            },
+            {
+                keys: ['services', 'treatments', 'what do you treat'],
+                action: showServices
+            }
+        ];
+
+        function normalize(s) {
+            return s.toLowerCase().replace(/[^a-z0-9\s&/-]/g, ' ').replace(/\s+/g, ' ').trim()
+        }
+
+        function containsPhrase(text, key) {
+            return text.includes(key)
+        }
+
+        function findService(text) {
+            return ALL_SERVICES.find(s => normalize(text).includes(normalize(s)))
+        }
+
+        function processUserMessage(raw) {
+            const text = normalize(raw);
+            if (!text) return;
+            if (/^(hi|hello|hey|hii|namaste|good morning|good afternoon|good evening)$/.test(text)) {
+                reply(`Hello! 👋 How can I help with your liver-care query today?`, 180);
+                setTimeout(mainOptions, 230);
+                return
+            }
+            if (/^(thanks|thank you|thankyou|ok thanks)$/.test(text)) {
+                reply(`You're welcome. 😊 If you need anything else, choose an option below.`, 180);
+                setTimeout(mainOptions, 240);
+                return
+            }
+            const service = findService(text);
+            if (service) {
+                reply(`<b>${escapeHTML(service)}</b><br>This is one of the liver-care services available through ${DOCTOR_NAME}. For diagnosis-specific guidance, a specialist consultation is best.<div class="mini-actions"><button class="mini-link" onclick="window.lmChatAction('appointment','Book Appointment')">Book Appointment</button><button class="mini-link" onclick="window.lmChatAction('whatsapp','WhatsApp')">WhatsApp</button></div>`);
+                return
+            }
+            for (const i of intents) {
+                if (i.keys.some(k => containsPhrase(text, k))) {
+                    if (i.action) i.action();
+                    else {
+                        reply(i.answer);
+                        setTimeout(mainOptions, 460)
+                    }
+                    return
+                }
+            }
+            reply(`I can help with <b>jaundice, hepatitis, fatty liver, cirrhosis, liver cancer, transplant, liver surgery, appointments and contact details</b>.<br><br>Try typing something like “fatty liver treatment”, “liver transplant”, or “book appointment”.`);
+            setTimeout(mainOptions, 450)
+        }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            processUserMessage(text)
+        }
+        sendBtn.onclick = sendMessage;
+        chatInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage()
+            }
+        });
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 90) + 'px'
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && chatBox.classList.contains('active')) closeChat()
+        });
+        window.lmChatAction = (action, label) => handleAction(action, label);
+    })();
+</script>
